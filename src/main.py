@@ -1,8 +1,9 @@
 from config import get_config
 from text_model import MTGTextModel
-from art_model import MTGArtModel, demo_single, demo_grid
+from art_model import MTGArtModel, single_image
 from mtg_text_generator import run_text
 from mtg_art_generator import run_art
+from card_generator import generate_card
 
 if __name__ == "__main__":
     config = get_config()
@@ -25,5 +26,5 @@ if __name__ == "__main__":
         config.art_model_checkpoint
     )
 
-    demo_single(art_model)
-    demo_grid(art_model)
+    generate_card(text_model(), name_model(), flavor_model(),
+                  single_image(art_model), show=True)
