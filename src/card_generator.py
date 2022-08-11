@@ -55,7 +55,7 @@ class TextWrapper(object):
         for match in re.finditer("{[^{^}]*}", text):
             span = match.span()
             slices.append(span)
-            symbol_key = text[span[0] + 1: span[1] - 1]
+            symbol_key = text[span[0] + 1: span[1] - 1].replace('/', '')
             try:
                 Image.open(f"data/symbols/{symbol_key}.png")
                 text_width += ICON_SIZE
@@ -133,7 +133,7 @@ def generate_card(text, name, flavor, art, show=False):
                 split_text.append(clean_text)
                 is_symbol.append(False)
 
-            symbol_key = text[span[0] + 1: span[1] - 1]
+            symbol_key = text[span[0] + 1: span[1] - 1].replace('/', '')
             try:
                 Image.open(f"data/symbols/{symbol_key}.png")
                 split_text.append(symbol_key)
