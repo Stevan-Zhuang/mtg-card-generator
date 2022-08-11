@@ -157,7 +157,7 @@ def generate_card(text, name, flavor, art, show=False):
                 art_draw.text((xy[0] + shift, xy[1]), part, "black", font=font)
                 shift += art_draw.textsize(text=part, font=font)[0]
 
-    # Draw named
+    # Draw name
     name_font_size = 22
     name_font = ImageFont.truetype("data/fonts/mplanti1.ttf", name_font_size)
     shift = 0
