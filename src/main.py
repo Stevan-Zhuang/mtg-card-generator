@@ -28,4 +28,4 @@ if __name__ == "__main__":
         )
 
         generate_card(text_model(), name_model(), flavor_model(),
-                    single_image(art_model), show=True)
+                      single_image(art_model), show=True)
