@@ -13,18 +13,19 @@ if __name__ == "__main__":
     if config.art_training:
         run_art(config)
 
-    text_model = MTGTextModel.load_from_checkpoint(
-        config.text_model_checkpoint
-    )
-    name_model = MTGTextModel.load_from_checkpoint(
-        config.name_model_checkpoint
-    )
-    flavor_model = MTGTextModel.load_from_checkpoint(
-        config.flavor_model_checkpoint
-    )
-    art_model = MTGArtModel.load_from_checkpoint(
-        config.art_model_checkpoint
-    )
+    if config.infer:
+        text_model = MTGTextModel.load_from_checkpoint(
+            config.text_model_checkpoint
+        )
+        name_model = MTGTextModel.load_from_checkpoint(
+            config.name_model_checkpoint
+        )
+        flavor_model = MTGTextModel.load_from_checkpoint(
+            config.flavor_model_checkpoint
+        )
+        art_model = MTGArtModel.load_from_checkpoint(
+            config.art_model_checkpoint
+        )
 
-    generate_card(text_model(), name_model(), flavor_model(),
-                  single_image(art_model), show=True)
+        generate_card(text_model(), name_model(), flavor_model(),
+                    single_image(art_model), show=True)
