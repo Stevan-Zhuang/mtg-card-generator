@@ -27,5 +27,9 @@ if __name__ == "__main__":
             config.art_model_checkpoint
         )
 
-        generate_card(text_model(), name_model(), flavor_model(),
-                      single_image(art_model), show=True)
+        text = text_model()
+        name = name_model()
+        flavor = flavor_model()
+        art = single_image(art_model)
+
+        generate_card(text, name, flavor, art, show=True)
