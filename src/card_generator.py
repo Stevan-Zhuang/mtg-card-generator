@@ -157,9 +157,20 @@ def generate_card(text, name, flavor, art, show=False):
                 art_draw.text((xy[0] + shift, xy[1]), part, "black", font=font)
                 shift += art_draw.textsize(text=part, font=font)[0]
 
-    # Draw name
-    name_font = ImageFont.truetype("data/fonts/mplanti1.ttf", 22)
-    art_draw.text(NAME_MARGINS, name, "black", font=name_font)
+    # Draw named
+    name_font_size = 22
+    name_font = ImageFont.truetype("data/fonts/mplanti1.ttf", name_font_size)
+    shift = 0
+    while True:
+        if art_draw.textsize(text=name, font=name_font)[0] <= MAX_TEXT_WIDTH:
+            break
+        name_font_size -= 2
+        shift += 1
+        name_font = ImageFont.truetype(
+            "data/fonts/mplanti1.ttf", name_font_size
+        )
+    art_draw.text((NAME_MARGINS[0], NAME_MARGINS[1] + shift), name, "black",
+                  font=name_font)
 
     # Draw description
     height = TEXT_MARGINS[1]
