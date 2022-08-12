@@ -112,10 +112,10 @@ class TextWrapper(object):
 
         return '\n'.join(wrapped_lines)
 
-def generate_card(text, name, flavor, art, show=False):
+def generate_card(text: str, name: str, flavor: str, art: torch.Tensor,
+                  show=False) -> Image:
     """Return a card image built from all generated data."""
     card_type = random.choice(CARD_TYPES)
-    card_type = "Creature"
 
     card_template = Image.open("data/card_template_transparent.png")
     if card_type == "Creature":
@@ -211,11 +211,11 @@ def generate_card(text, name, flavor, art, show=False):
     if len(mana_cost) > 6:
         mana_cost = mana_cost[0:1] + random.sample(mana_cost[1:], k=5)
 
+    # Since sample does not maintain order, resort
     def mana_cost_sort(x):
         if isinstance(x, int):
             return -1
         return mana_types.index(x)
-        
     mana_cost.sort(key=mana_cost_sort)
 
     mana_shift = MANA_SIZE
@@ -242,6 +242,7 @@ def generate_card(text, name, flavor, art, show=False):
     art_draw.text((NAME_MARGINS[0], NAME_MARGINS[1] + name_shift), name, "black",
                   font=name_font)
 
+
     # Draw description
     height = TEXT_MARGINS[1]
 
@@ -257,6 +258,7 @@ def generate_card(text, name, flavor, art, show=False):
     flavor_font = ImageFont.truetype("data/fonts/mplantinit.ttf", 16)
     lines = TextWrapper(flavor, flavor_font, MAX_TEXT_WIDTH).wrapped_text()
     art_draw.text((TEXT_MARGINS[0], height), lines, "black", font=flavor_font)
+
 
     # Card type
     type_font = ImageFont.truetype("data/fonts/mplanti1.ttf", 20)
