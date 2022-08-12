@@ -8,6 +8,7 @@ def get_config():
     parser.add_argument("--text_training", type=bool, default=False)
     parser.add_argument("--art_training", type=bool, default=False)
     parser.add_argument("--infer", type=bool, default=True)
+    parser.add_argument("--n_cards", type=int, default=25)
 
     # Text defaults
     name_vocab = string.ascii_letters + " ,'-$"

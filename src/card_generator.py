@@ -264,9 +264,9 @@ def generate_card(text: str, name: str, flavor: str, art: torch.Tensor,
     type_font = ImageFont.truetype("data/fonts/mplanti1.ttf", 20)
     art_draw.text(TYPE_MARGINS, card_type, "black", font=type_font)
 
+    plt.imshow(padded_art)
+    plt.axis('off')
     if show:
-        plt.imshow(padded_art)
-        plt.axis('off')
         plt.show()
 
     return padded_art
