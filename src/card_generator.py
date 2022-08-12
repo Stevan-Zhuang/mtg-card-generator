@@ -2,6 +2,8 @@ import torch
 import matplotlib.pyplot as plt
 from PIL import Image, ImageFont, ImageDraw
 import re
+import pandas as pd
+import random
 
 ICON_SIZE = 15
 
@@ -10,12 +12,22 @@ CARD_SIZE = (400, 560)
 MARGIN_SIDE = 36
 MARGIN_TOP = 66
 
-NAME_MARGINS = (38, 38)
+NAME_MARGINS = (38, 36)
 
 TEXT_MARGINS = (38, 360)
 MAX_TEXT_WIDTH = CARD_SIZE[0] - TEXT_MARGINS[0] * 2
 
 TEXT_PADDING = 5
+
+CARD_TYPES = ["Land", "Creature", "Artifact",
+              "Enchantment", "Instant", "Sorcery"]
+
+TYPE_MARGINS = (38, 320)
+
+MANA_MARGINS = (362, 36)
+MANA_SIZE = 20
+
+STATS_MARGINS = (332, 502)
 
 class TextWrapper(object):
     """
@@ -102,9 +114,15 @@ class TextWrapper(object):
 
 def generate_card(text, name, flavor, art, show=False):
     """Return a card image built from all generated data."""
-    # Card art
-    card_template = Image.open("data/card_template_transparent.png")
+    card_type = random.choice(CARD_TYPES)
+    card_type = "Creature"
 
+    card_template = Image.open("data/card_template_transparent.png")
+    if card_type == "Creature":
+        card_template = Image.open(
+            "data/card_template_transparent_creature.png"
+        )
+    # Card art
     art_numpy = (art * 255).to(torch.uint8).numpy()
     art_pil = Image.fromarray(art_numpy)
     scaled_width = card_template.size[0] - MARGIN_SIDE * 2
@@ -115,9 +133,6 @@ def generate_card(text, name, flavor, art, show=False):
     padded_art.paste(card_template, (0, 0), card_template)
 
     art_draw = ImageDraw.Draw(padded_art)
-
-    # TODO
-    # Make name text shrink if too large
 
     def draw_text_with_symbols(text, font, xy):
         slices = [(0, 0)]
@@ -152,31 +167,86 @@ def generate_card(text, name, flavor, art, show=False):
                 symbol = Image.open(f"data/symbols/{part}.png")
                 symbol = symbol.resize((ICON_SIZE, ICON_SIZE))
                 padded_art.paste(symbol, (xy[0] + shift, xy[1]), symbol)
-                shift += symbol.size[0]
+                shift += ICON_SIZE
             else:
                 art_draw.text((xy[0] + shift, xy[1]), part, "black", font=font)
                 shift += art_draw.textsize(text=part, font=font)[0]
 
-    # Draw name
+    # Draw mana and name
+    def weighted_random(c, f=1):
+        return min(abs(int(random.gauss(f, c ** 0.5))), c)
+
+    mana_cost = []
+    if random.choice([True, False]):
+        mana_cost.append(weighted_random(20))
+
+    mana_types = "GWUBR"
+    mana_selection = random.sample(mana_types, k=weighted_random(5, 2))
+    for mana_type in mana_selection:
+        mana_cost.extend([mana_type] * (weighted_random(2) + 1))
+
+    if card_type == "Creature":
+        creature_types = pd.read_json("data/creature-types.json")
+        card_type += f" — {random.choice(creature_types['data'])}"
+
+        attack = weighted_random(10, 3)
+        defense = weighted_random(9, 3) + 1
+        stats = f"{attack}/{defense}"
+
+        stats_font = ImageFont.truetype("data/fonts/mplanti1.ttf", 24)
+        w = art_draw.textsize(text=stats, font=stats_font)[0]
+        art_draw.text((STATS_MARGINS[0] - (w // 2), STATS_MARGINS[1]),
+                      stats, "black", font=stats_font)
+
+    elif card_type == "Artifact":
+        mana_cost = [mana for mana in mana_cost if isinstance(mana, int)]
+    try:
+        if mana_cost[0] == 0 and len(mana_cost) > 1:
+            mana_cost.pop(0)
+    except:
+        mana_cost.append(0)
+    if card_type == "Land":
+        mana_cost = []
+
+    if len(mana_cost) > 6:
+        mana_cost = mana_cost[0:1] + random.sample(mana_cost[1:], k=5)
+
+    def mana_cost_sort(x):
+        if isinstance(x, int):
+            return -1
+        return mana_types.index(x)
+        
+    mana_cost.sort(key=mana_cost_sort)
+
+    mana_shift = MANA_SIZE
+    for mana in mana_cost[::-1]:
+        symbol = Image.open(f"data/symbols/{mana}.png")
+        symbol = symbol.resize((MANA_SIZE, MANA_SIZE))
+        padded_art.paste(
+            symbol, (MANA_MARGINS[0] - mana_shift, MANA_MARGINS[1]), symbol
+        )
+        mana_shift += MANA_SIZE
+
     name_font_size = 22
     name_font = ImageFont.truetype("data/fonts/mplanti1.ttf", name_font_size)
-    shift = 0
+    name_shift = 0
     while True:
-        if art_draw.textsize(text=name, font=name_font)[0] <= MAX_TEXT_WIDTH:
+        fit = MAX_TEXT_WIDTH - mana_shift
+        if art_draw.textsize(text=name, font=name_font)[0] <= fit:
             break
         name_font_size -= 2
-        shift += 1
+        name_shift += 1
         name_font = ImageFont.truetype(
             "data/fonts/mplanti1.ttf", name_font_size
         )
-    art_draw.text((NAME_MARGINS[0], NAME_MARGINS[1] + shift), name, "black",
+    art_draw.text((NAME_MARGINS[0], NAME_MARGINS[1] + name_shift), name, "black",
                   font=name_font)
 
     # Draw description
     height = TEXT_MARGINS[1]
 
     text_font = ImageFont.truetype("data/fonts/mplantin.ttf", 16)
-    for block in text.split("\n"):
+    for block in text.split("\n")[:2]:
         lines = TextWrapper(block, text_font, MAX_TEXT_WIDTH).wrapped_text()
         for line in lines.split("\n"):
             draw_text_with_symbols(line, text_font, (TEXT_MARGINS[0], height))
@@ -187,6 +257,10 @@ def generate_card(text, name, flavor, art, show=False):
     flavor_font = ImageFont.truetype("data/fonts/mplantinit.ttf", 16)
     lines = TextWrapper(flavor, flavor_font, MAX_TEXT_WIDTH).wrapped_text()
     art_draw.text((TEXT_MARGINS[0], height), lines, "black", font=flavor_font)
+
+    # Card type
+    type_font = ImageFont.truetype("data/fonts/mplanti1.ttf", 20)
+    art_draw.text(TYPE_MARGINS, card_type, "black", font=type_font)
 
     if show:
         plt.imshow(padded_art)
